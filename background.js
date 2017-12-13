@@ -23,7 +23,9 @@ browser.tabs.onActivated.addListener(updateCurrentTab);
 browser.windows.onFocusChanged.addListener(updateCurrentTab);
 browser.windows.onRemoved.addListener(updateCurrentTab);
 
-browser.tabs.onCreated.addListener(moveTab);
+// browser.tabs.onCreated.addListener(moveTab);
+
+browser.browserAction.onClicked.addListener(executeBrowserClickCommand);
 
 browser.commands.onCommand.addListener(function(command) {
     if (command == "open-new-tab-at-default-location") {
@@ -31,7 +33,21 @@ browser.commands.onCommand.addListener(function(command) {
         browser.tabs.onCreated.addListener(fixListeners);
         browser.tabs.create({});
     }
+
+    executeExCommand(command);
 });
+
+function executeBrowserClickCommand() {
+    executeExCommand("open-new-tab-at-next-location");
+}
+
+function executeExCommand(command) {
+    if (command == "open-new-tab-at-next-location") {
+        browser.tabs.onCreated.addListener(moveTab);
+        browser.tabs.onCreated.addListener(fixToDefaultListeners);
+        browser.tabs.create({});
+    }
+}
 
 if (browser.sessions.getTabValue && browser.sessions.setTabValue) {
     addSessionKeyToExistingTabs();
@@ -62,6 +78,12 @@ function addSessionKeyToExistingTabs() {
 function fixListeners() {
     browser.tabs.onCreated.removeListener(fixListeners);
     browser.tabs.onCreated.addListener(moveTab);
+}
+
+// doney mod 
+function fixToDefaultListeners() {
+    browser.tabs.onCreated.removeListener(fixToDefaultListeners);
+    browser.tabs.onCreated.removeListener(moveTab);
 }
 
 function moveTab(newTab) {
